@@ -23,67 +23,104 @@
   </header>
 
   <main class="main">
-    <!-- JSON Data Input -->
-    <section class="card input-card" aria-label="Entrada de datos JSON">
-      <h2 class="section-title">Importar Datos (JSON)</h2>
-      <p class="input-help">Pega aquí tu JSON con formato: <code>[{"name": "Evento", "price": 100, "category": "Tipo"}]</code></p>
-      <textarea id="jsonInput" placeholder='[
-  {"name": "Concierto Rock", "price": 45000, "category": "Música"},
-  {"name": "Partido Fútbol", "price": 12000, "category": "Deportes"}
-]'></textarea>
-      <div class="input-actions">
-        <button id="updateBtn" class="btn btn-primary">Actualizar Dashboard</button>
-        <span id="errorMsg" class="error-msg"></span>
+    <!-- Dashboard Controls & Filters -->
+    <section class="controls-card card" aria-label="Filtros y Controles">
+      <div class="filters-grid">
+        <div class="filter-group">
+          <label for="areaFilter">Área de Negocio</label>
+          <select id="areaFilter"><option value="all">Todas</option></select>
+        </div>
+        <div class="filter-group">
+          <label for="statusFilter">Estado</label>
+          <select id="statusFilter"><option value="all">Todos</option></select>
+        </div>
+        <div class="filter-group">
+          <label for="seasonFilter">Temporada</label>
+          <select id="seasonFilter"><option value="all">Todas</option></select>
+        </div>
       </div>
     </section>
 
-    <!-- KPI Cards -->
-    <section class="kpi-grid" aria-label="KPI Cards">
+    <!-- KPI Grid Enhanced -->
+    <section class="kpi-grid" aria-label="Métricas Principales">
       <div class="card kpi-card" id="kpi-total">
-        <p class="kpi-label">Total Ventas</p>
+        <p class="kpi-label">Ingreso Total</p>
         <p class="kpi-value" id="kpi-total-value">—</p>
       </div>
-      <div class="card kpi-card" id="kpi-best">
-        <p class="kpi-label">Mejor Evento</p>
-        <p class="kpi-value" id="kpi-best-value">—</p>
+      <div class="card kpi-card" id="kpi-margin">
+        <p class="kpi-label">Margen Bruto</p>
+        <p class="kpi-value" id="kpi-margin-value">—</p>
       </div>
       <div class="card kpi-card" id="kpi-avg">
-        <p class="kpi-label">Promedio</p>
+        <p class="kpi-label">Ticket Promedio</p>
         <p class="kpi-value" id="kpi-avg-value">—</p>
       </div>
       <div class="card kpi-card" id="kpi-count">
-        <p class="kpi-label">Eventos</p>
+        <p class="kpi-label">Negocios Activos</p>
         <p class="kpi-value" id="kpi-count-value">—</p>
       </div>
     </section>
 
-    <!-- Chart -->
-    <section class="card chart-card" aria-label="Gráfico de ventas">
-      <h2 class="section-title">Ventas por Evento</h2>
-      <div class="chart-wrapper">
-        <canvas id="salesChart" role="img" aria-label="Bar chart of sales by event"></canvas>
-      </div>
-    </section>
+    <!-- Data Visualization Grid -->
+    <div class="viz-grid">
+      <!-- Area Revenue Chart -->
+      <section class="card chart-card" aria-label="Ingresos por Área">
+        <h2 class="section-title">Ingresos por Área</h2>
+        <div class="chart-wrapper">
+          <canvas id="areaChart"></canvas>
+        </div>
+      </section>
+
+      <!-- Status Funnel -->
+      <section class="card chart-card" aria-label="Embudo de Estados">
+        <h2 class="section-title">Embudo de Estados</h2>
+        <div class="chart-wrapper">
+          <canvas id="statusChart"></canvas>
+        </div>
+      </section>
+
+      <!-- Time Series Chart -->
+      <section class="card chart-card full-width" aria-label="Tendencia Mensual">
+        <h2 class="section-title">Tendencia de Ingresos Mensuales</h2>
+        <div class="chart-wrapper">
+          <canvas id="trendChart"></canvas>
+        </div>
+      </section>
+    </div>
 
     <!-- Data Table -->
-    <section class="card table-card" aria-label="Tabla de datos">
-      <h2 class="section-title">Detalle de Ventas</h2>
+    <section class="card table-card" aria-label="Detalle de Negocios">
+      <h2 class="section-title">Listado de Negocios</h2>
       <div class="table-wrapper">
         <table id="salesTable">
           <thead>
             <tr>
-              <th scope="col">#</th>
-              <th scope="col">Evento ID</th>
-              <th scope="col">Cantidad Ventas</th>
-              <th scope="col">% del Total</th>
+              <th scope="col">Folio</th>
+              <th scope="col">Negocio</th>
+              <th scope="col">Área</th>
+              <th scope="col">Ingreso ($)</th>
+              <th scope="col">Estado</th>
             </tr>
           </thead>
           <tbody id="salesTableBody">
-            <!-- Filled by app.js -->
+            <!-- Dynamic content -->
           </tbody>
         </table>
       </div>
     </section>
+
+    <!-- JSON Data Input (Collapsed by default) -->
+    <details class="card input-card">
+      <summary class="section-title">Importar / Actualizar JSON</summary>
+      <div class="input-content">
+        <p class="input-help">Copia aquí el contenido de <code>data.json</code></p>
+        <textarea id="jsonInput" placeholder="[{...}]"></textarea>
+        <div class="input-actions" style="margin-top: 1rem;">
+          <button id="updateBtn" class="btn btn-primary">Cargar Datos</button>
+          <span id="errorMsg" class="error-msg"></span>
+        </div>
+      </div>
+    </details>
   </main>
 
   <footer class="footer">

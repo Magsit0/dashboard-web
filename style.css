@@ -217,32 +217,80 @@ body {
   transition: opacity .4s;
 }
 
-/* ── Chart ── */
-.section-title {
-  font-size: .875rem;
+/* ── Controls & Filters ── */
+.controls-card {
+  padding: 1.25rem;
+  background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+
+.filter-group label {
+  font-size: .75rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: .08em;
   color: var(--text-muted);
-  margin-bottom: 1.25rem;
+  letter-spacing: .05em;
 }
 
-.chart-wrapper {
-  position: relative;
-  height: 320px;
-}
-
-/* ── Table ── */
-.table-wrapper {
-  overflow-x: auto;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
+.filter-group select {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: .6rem;
   font-size: .9rem;
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--transition);
 }
 
+.filter-group select:focus {
+  border-color: var(--accent);
+}
+
+/* ── Viz Grid ── */
+.viz-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.75rem;
+}
+
+.viz-grid .full-width {
+  grid-column: span 2;
+}
+
+/* ── Updated Card ── */
+.chart-card {
+  min-height: 400px;
+}
+
+/* ── JSON Details ── */
+.input-card summary {
+  cursor: pointer;
+  outline: none;
+  list-style: none;
+}
+
+.input-card summary::-webkit-details-marker {
+  display: none;
+}
+
+.input-content {
+  padding-top: 1rem;
+}
+
+/* ── Table Improvements ── */
 thead th {
   padding: .75rem 1rem;
   text-align: left;
@@ -251,7 +299,7 @@ thead th {
   text-transform: uppercase;
   letter-spacing: .07em;
   color: var(--text-muted);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 2px solid var(--border);
 }
 
 tbody tr {

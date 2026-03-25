@@ -1,183 +1,252 @@
 /**
- * GLOVOX · Dashboard Web · app.js
- * Gestión dinámica de datos por JSON.
+ * GLOVOX Advanced Analytics Dashboard
+ * Core Logic for Data Processing and Visualizations
  */
 
-'use strict';
+// State Management
+let rawData = [];
+let filteredData = [];
+let charts = {
+    area: null,
+    status: null,
+    trend: null
+};
 
-// ─── Estado Global ───────────────────────────────────────────────────────────
-let salesChartInstance = null;
-let currentData = [
-  { name: 'Evento A', price: 120, category: 'General' },
-  { name: 'Evento B', price: 300, category: 'VIP' },
-  { name: 'Evento C', price: 80,  category: 'General' },
-  { name: 'Evento D', price: 200, category: 'Estudiante' },
-  { name: 'Evento E', price: 150, category: 'VIP' },
-];
+// Selectors
+const jsonInput = document.getElementById('jsonInput');
+const updateBtn = document.getElementById('updateBtn');
+const errorMsg = document.getElementById('errorMsg');
+const areaFilter = document.getElementById('areaFilter');
+const statusFilter = document.getElementById('statusFilter');
+const seasonFilter = document.getElementById('seasonFilter');
 
-// ─── Utilidades ──────────────────────────────────────────────────────────────
-function sortDesc(data) {
-  return [...data].sort((a, b) => b.price - a.price);
+// Initialization
+document.addEventListener('DOMContentLoaded', async () => {
+    // Attempt to load from data.json file first
+    try {
+        const response = await fetch('data.json');
+        if (response.ok) {
+            const data = await response.json();
+            if (Array.isArray(data) && data.length > 0) {
+                console.log('Loaded from data.json file');
+                initDashboard(data);
+            }
+        }
+    } catch (e) {
+        console.warn('data.json not found or empty, waiting for manual input.');
+    }
+
+    // Event Listeners
+    updateBtn.addEventListener('click', processManualInput);
+    [areaFilter, statusFilter, seasonFilter].forEach(filter => {
+        filter.addEventListener('change', applyFilters);
+    });
+});
+
+function processManualInput() {
+    try {
+        const input = jsonInput.value.trim();
+        if (!input) throw new Error('Por favor ingresa datos JSON.');
+        
+        const data = JSON.parse(input);
+        if (!Array.isArray(data)) throw new Error('El formato debe ser un arreglo de objetos.');
+        
+        errorMsg.textContent = '';
+        initDashboard(data);
+    } catch (err) {
+        errorMsg.textContent = `Error: ${err.message}`;
+    }
 }
 
-function fmtNumber(n) {
-  return n.toLocaleString('es-CL');
-}
-
-function showError(msg) {
-  const el = document.getElementById('errorMsg');
-  if (el) el.textContent = msg;
-}
-
-function clearError() {
-  const el = document.getElementById('errorMsg');
-  if (el) el.textContent = '';
-}
-
-// ─── KPIs ────────────────────────────────────────────────────────────────────
-function renderKPIs(data) {
-  const total  = data.reduce((s, r) => s + r.price, 0);
-  const sorted = sortDesc(data);
-  const best   = sorted[0] || { name: '—', price: 0 };
-  const avg    = data.length ? Math.round(total / data.length) : 0;
-  const count  = data.length;
-
-  document.getElementById('kpi-total-value').textContent = fmtNumber(total);
-  document.getElementById('kpi-best-value').textContent  = `${best.name} (${fmtNumber(best.price)})`;
-  document.getElementById('kpi-avg-value').textContent   = fmtNumber(avg);
-  document.getElementById('kpi-count-value').textContent = count;
-}
-
-// ─── Chart.js ────────────────────────────────────────────────────────────────
-function renderChart(data) {
-  const sorted = sortDesc(data);
-  const labels = sorted.map(r => r.name);
-  const values = sorted.map(r => r.price);
-
-  const ctx = document.getElementById('salesChart').getContext('2d');
-
-  // Destruir gráfico previo si existe
-  if (salesChartInstance) {
-    salesChartInstance.destroy();
-  }
-
-  const gradient = (ctx) => {
-    const g = ctx.createLinearGradient(0, 0, 0, 300);
-    g.addColorStop(0, 'rgba(91,141,238,0.9)');
-    g.addColorStop(1, 'rgba(124,92,232,0.5)');
-    return g;
-  };
-
-  salesChartInstance = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Ventas ($)',
-        data: values,
-        backgroundColor: (c) => gradient(c.chart.ctx),
-        borderColor: 'rgba(91,141,238,0.8)',
-        borderWidth: 1.5,
-        borderRadius: 8,
-        borderSkipped: false,
-      }],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#1a1d27',
-          borderColor: '#2a2f45',
-          borderWidth: 1,
-          titleColor: '#8891a8',
-          bodyColor: '#e8eaf0',
-          callbacks: {
-            label: (ctx) => `  $${fmtNumber(ctx.parsed.y)}`,
-          },
-        },
-      },
-      scales: {
-        x: {
-          grid: { color: 'rgba(255,255,255,0.04)' },
-          ticks: { color: '#8891a8', font: { family: 'Inter' } },
-        },
-        y: {
-          grid: { color: 'rgba(255,255,255,0.06)' },
-          ticks: { color: '#8891a8', font: { family: 'Inter' } },
-          beginAtZero: true,
-        },
-      },
-      animation: {
-        duration: 800,
-        easing: 'easeOutQuart',
-      },
-    },
-  });
-}
-
-// ─── Tabla ───────────────────────────────────────────────────────────────────
-function renderTable(data) {
-  const sorted = sortDesc(data);
-  const total  = sorted.reduce((s, r) => s + r.price, 0);
-  const tbody  = document.getElementById('salesTableBody');
-
-  tbody.innerHTML = sorted.map((row, i) => {
-    const pct = total > 0 ? ((row.price / total) * 100).toFixed(1) : 0;
-    return `
-      <tr>
-        <td>${i + 1}</td>
-        <td><span class="badge">${row.name}</span></td>
-        <td>$${fmtNumber(row.price)}</td>
-        <td><span class="category-tag">${row.category}</span> (${pct}%)</td>
-      </tr>`;
-  }).join('');
-}
-
-// ─── Lógica de Procesamiento ─────────────────────────────────────────────────
-function processInput() {
-  const input = document.getElementById('jsonInput').value.trim();
-  if (!input) return;
-
-  try {
-    const data = JSON.parse(input);
+function initDashboard(data) {
+    rawData = data;
     
-    // Validación básica
-    if (!Array.isArray(data)) throw new Error('El JSON debe ser un array de objetos.');
+    // Populate Filters
+    populateFilter(areaFilter, 'area_negocio');
+    populateFilter(statusFilter, 'estado');
+    populateFilter(seasonFilter, 'Temporada');
     
-    data.forEach((item, index) => {
-      if (!item.name || item.price === undefined || !item.category) {
-        throw new Error(`Falta información en el elemento #${index + 1} (requiere name, price, category).`);
-      }
+    applyFilters();
+}
+
+function populateFilter(selectElement, key) {
+    const values = [...new Set(rawData.map(item => item[key]))].filter(Boolean).sort();
+    selectElement.innerHTML = '<option value="all">Todas / Todos</option>';
+    values.forEach(val => {
+        const opt = document.createElement('option');
+        opt.value = val;
+        opt.textContent = val;
+        selectElement.appendChild(opt);
+    });
+}
+
+function applyFilters() {
+    const areaVal = areaFilter.value;
+    const statusVal = statusFilter.value;
+    const seasonVal = seasonFilter.value;
+
+    filteredData = rawData.filter(item => {
+        return (areaVal === 'all' || item.area_negocio === areaVal) &&
+               (statusVal === 'all' || item.estado === statusVal) &&
+               (seasonVal === 'all' || item.Temporada === seasonVal);
     });
 
-    currentData = data;
-    renderAll();
-    clearError();
-  } catch (err) {
-    showError(`Error: ${err.message}`);
-  }
+    updateDashboard();
 }
 
-function renderAll() {
-  renderKPIs(currentData);
-  renderChart(currentData);
-  renderTable(currentData);
+function updateDashboard() {
+    renderKPIs();
+    renderAreaChart();
+    renderStatusChart();
+    renderTrendChart();
+    renderTable();
 }
 
-function setYear() {
-  const el = document.getElementById('footer-year');
-  if (el) el.textContent = new Date().getFullYear();
+function renderKPIs() {
+    const totalRevenue = filteredData.reduce((sum, item) => sum + (parseFloat(item.ingreso_total_neto) || 0), 0);
+    const totalCost = filteredData.reduce((sum, item) => sum + (parseFloat(item.costoAPI) || 0), 0);
+    const count = filteredData.length;
+    const margin = totalRevenue > 0 ? ((totalRevenue - totalCost) / totalRevenue * 100).toFixed(1) : 0;
+    const avg = count > 0 ? (totalRevenue / count).toFixed(0) : 0;
+
+    document.getElementById('kpi-total-value').textContent = formatCurrency(totalRevenue);
+    document.getElementById('kpi-margin-value').textContent = `${margin}%`;
+    document.getElementById('kpi-avg-value').textContent = formatCurrency(avg);
+    document.getElementById('kpi-count-value').textContent = count;
 }
 
-// ─── Init ────────────────────────────────────────────────────────────────────
-(function init() {
-  setYear();
-  renderAll();
+function renderAreaChart() {
+    const areaData = {};
+    filteredData.forEach(item => {
+        const area = item.area_negocio || 'Otros';
+        areaData[area] = (areaData[area] || 0) + (parseFloat(item.ingreso_total_neto) || 0);
+    });
 
-  const updateBtn = document.getElementById('updateBtn');
-  if (updateBtn) {
-    updateBtn.addEventListener('click', processInput);
-  }
-})();
+    const labels = Object.keys(areaData).sort((a, b) => areaData[b] - areaData[a]);
+    const values = labels.map(l => areaData[l]);
+
+    if (charts.area) charts.area.destroy();
+    
+    const ctx = document.getElementById('areaChart').getContext('2d');
+    charts.area = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Ingresos por Área',
+                data: values,
+                backgroundColor: '#3b82f6',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                y: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+            }
+        }
+    });
+}
+
+function renderStatusChart() {
+    const statusData = {};
+    filteredData.forEach(item => {
+        const status = item.estado || 'Indefinido';
+        statusData[status] = (statusData[status] || 0) + 1;
+    });
+
+    const labels = Object.keys(statusData);
+    const values = Object.values(statusData);
+
+    if (charts.status) charts.status.destroy();
+    
+    const ctx = document.getElementById('statusChart').getContext('2d');
+    charts.status = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: values,
+                backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'right', labels: { color: '#94a3b8', font: { size: 10 } } }
+            },
+            cutout: '70%'
+        }
+    });
+}
+
+function renderTrendChart() {
+    const trendData = {};
+    filteredData.forEach(item => {
+        if (!item.fechaAsignacion) return;
+        const date = new Date(item.fechaAsignacion);
+        const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        trendData[month] = (trendData[month] || 0) + (parseFloat(item.ingreso_total_neto) || 0);
+    });
+
+    const sortedMonths = Object.keys(trendData).sort();
+    const values = sortedMonths.map(m => trendData[m]);
+
+    if (charts.trend) charts.trend.destroy();
+    
+    const ctx = document.getElementById('trendChart').getContext('2d');
+    charts.trend = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: sortedMonths,
+            datasets: [{
+                label: 'Ingreso Neto',
+                data: values,
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }
+            }
+        }
+    });
+}
+
+function renderTable() {
+    const tableBody = document.getElementById('salesTableBody');
+    tableBody.innerHTML = '';
+
+    filteredData.slice(0, 50).forEach(item => { // Limit to 50 for performance
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td style="color: var(--text-muted); font-size: 0.8rem;">${item.external_id || '—'}</td>
+            <td style="font-weight: 500;">${item.nombre_negocio || 'Sin Nombre'}</td>
+            <td><span class="badge" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">${item.area_negocio || '—'}</span></td>
+            <td>${formatCurrency(parseFloat(item.ingreso_total_neto) || 0)}</td>
+            <td><span class="status-dot ${item.estado === 'CERRADO' ? 'status-online' : 'status-busy'}"></span> ${item.estado || '—'}</td>
+        `;
+        tableBody.appendChild(row);
+    });
+}
+
+function formatCurrency(value) {
+    return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(value);
+}
