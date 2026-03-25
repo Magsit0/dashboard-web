@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Dashboard interactivo de Ventas por Evento — versión web estática con HTML y JavaScript." />
+  <title>Dashboard · Ventas por Evento</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <div class="brand">
+        <span class="brand-icon">📊</span>
+        <span class="brand-name">GLOVOX</span>
+      </div>
+      <h1 class="page-title">Dashboard · Ventas por Evento</h1>
+    </div>
+  </header>
+
+  <main class="main">
+    <!-- KPI Cards -->
+    <section class="kpi-grid" aria-label="KPI Cards">
+      <div class="card kpi-card" id="kpi-total">
+        <p class="kpi-label">Total Ventas</p>
+        <p class="kpi-value" id="kpi-total-value">—</p>
+      </div>
+      <div class="card kpi-card" id="kpi-best">
+        <p class="kpi-label">Mejor Evento</p>
+        <p class="kpi-value" id="kpi-best-value">—</p>
+      </div>
+      <div class="card kpi-card" id="kpi-avg">
+        <p class="kpi-label">Promedio</p>
+        <p class="kpi-value" id="kpi-avg-value">—</p>
+      </div>
+      <div class="card kpi-card" id="kpi-count">
+        <p class="kpi-label">Eventos</p>
+        <p class="kpi-value" id="kpi-count-value">—</p>
+      </div>
+    </section>
+
+    <!-- Chart -->
+    <section class="card chart-card" aria-label="Gráfico de ventas">
+      <h2 class="section-title">Ventas por Evento</h2>
+      <div class="chart-wrapper">
+        <canvas id="salesChart" role="img" aria-label="Bar chart of sales by event"></canvas>
+      </div>
+    </section>
+
+    <!-- Data Table -->
+    <section class="card table-card" aria-label="Tabla de datos">
+      <h2 class="section-title">Detalle de Ventas</h2>
+      <div class="table-wrapper">
+        <table id="salesTable">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Evento ID</th>
+              <th scope="col">Cantidad Ventas</th>
+              <th scope="col">% del Total</th>
+            </tr>
+          </thead>
+          <tbody id="salesTableBody">
+            <!-- Filled by app.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>GLOVOX &mdash; Dashboard Web &mdash; <span id="footer-year"></span></p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
