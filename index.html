@@ -23,6 +23,20 @@
   </header>
 
   <main class="main">
+    <!-- JSON Data Input -->
+    <section class="card input-card" aria-label="Entrada de datos JSON">
+      <h2 class="section-title">Importar Datos (JSON)</h2>
+      <p class="input-help">Pega aquí tu JSON con formato: <code>[{"name": "Evento", "price": 100, "category": "Tipo"}]</code></p>
+      <textarea id="jsonInput" placeholder='[
+  {"name": "Concierto Rock", "price": 45000, "category": "Música"},
+  {"name": "Partido Fútbol", "price": 12000, "category": "Deportes"}
+]'></textarea>
+      <div class="input-actions">
+        <button id="updateBtn" class="btn btn-primary">Actualizar Dashboard</button>
+        <span id="errorMsg" class="error-msg"></span>
+      </div>
+    </section>
+
     <!-- KPI Cards -->
     <section class="kpi-grid" aria-label="KPI Cards">
       <div class="card kpi-card" id="kpi-total">

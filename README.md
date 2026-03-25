@@ -84,11 +84,41 @@ dashboard-web/
 
 ---
 
-## 🔄 Conectar a datos reales
+## 🔄 Importar Datos (JSON)
 
-En `app.js`, reemplaza el array `SALES_DATA` por un `fetch()` a tu API o archivo JSON:
+El dashboard permite importar datos dinámicamente. Puedes copiar y pegar un array JSON en el campo "Importar Datos" para actualizar las visualizaciones al instante.
 
-```js
-const response = await fetch('https://tu-api.com/ventas');
-const data = await response.json();
+### Formato de datos requerido:
+```json
+[
+  {
+    "name": "Nombre del Evento",
+    "price": 12000,
+    "category": "Música"
+  }
+]
+```
+
+---
+
+## 📦 Tecnologías
+
+| Tecnología | Rol |
+|---|---|
+| HTML5 | Estructura semántica |
+| CSS3 (Vanilla) | Estilos dark-mode, responsive |
+| JavaScript (ES6+) | Lógica de datos, validación JSON y renderizado |
+| [Chart.js v4](https://www.chartjs.org/) | Gráfico de barras (CDN) |
+
+---
+
+## 📁 Estructura
+
+```
+dashboard-web/
+├── index.html        # Página principal y estructura
+├── style.css         # Estilos y diseño premium
+├── app.js            # Lógica de procesamiento y Chart.js
+├── .gitignore        # Configuración de Git
+└── README.md         # Documentación del proyecto
 ```

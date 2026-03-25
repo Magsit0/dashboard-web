@@ -1,38 +1,49 @@
 /**
  * GLOVOX · Dashboard Web · app.js
- * Datos de ventas por evento — versión estática (reemplaza BigQuery/Streamlit).
- * Para conectar a una API real, reemplaza `SALES_DATA` por un fetch().
+ * Gestión dinámica de datos por JSON.
  */
 
 'use strict';
 
-// ─── Datos (simulados — equivale al DataFrame de dashboard.py) ───────────────
-const SALES_DATA = [
-  { eventoId: 'A', qVentas: 120 },
-  { eventoId: 'B', qVentas: 300 },
-  { eventoId: 'C', qVentas: 80  },
-  { eventoId: 'D', qVentas: 200 },
-  { eventoId: 'E', qVentas: 150 },
+// ─── Estado Global ───────────────────────────────────────────────────────────
+let salesChartInstance = null;
+let currentData = [
+  { name: 'Evento A', price: 120, category: 'General' },
+  { name: 'Evento B', price: 300, category: 'VIP' },
+  { name: 'Evento C', price: 80,  category: 'General' },
+  { name: 'Evento D', price: 200, category: 'Estudiante' },
+  { name: 'Evento E', price: 150, category: 'VIP' },
 ];
 
 // ─── Utilidades ──────────────────────────────────────────────────────────────
 function sortDesc(data) {
-  return [...data].sort((a, b) => b.qVentas - a.qVentas);
+  return [...data].sort((a, b) => b.price - a.price);
 }
 
 function fmtNumber(n) {
   return n.toLocaleString('es-CL');
 }
 
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  if (el) el.textContent = msg;
+}
+
+function clearError() {
+  const el = document.getElementById('errorMsg');
+  if (el) el.textContent = '';
+}
+
 // ─── KPIs ────────────────────────────────────────────────────────────────────
 function renderKPIs(data) {
-  const total  = data.reduce((s, r) => s + r.qVentas, 0);
-  const best   = sortDesc(data)[0];
-  const avg    = Math.round(total / data.length);
+  const total  = data.reduce((s, r) => s + r.price, 0);
+  const sorted = sortDesc(data);
+  const best   = sorted[0] || { name: '—', price: 0 };
+  const avg    = data.length ? Math.round(total / data.length) : 0;
   const count  = data.length;
 
   document.getElementById('kpi-total-value').textContent = fmtNumber(total);
-  document.getElementById('kpi-best-value').textContent  = `${best.eventoId} (${fmtNumber(best.qVentas)})`;
+  document.getElementById('kpi-best-value').textContent  = `${best.name} (${fmtNumber(best.price)})`;
   document.getElementById('kpi-avg-value').textContent   = fmtNumber(avg);
   document.getElementById('kpi-count-value').textContent = count;
 }
@@ -40,8 +51,15 @@ function renderKPIs(data) {
 // ─── Chart.js ────────────────────────────────────────────────────────────────
 function renderChart(data) {
   const sorted = sortDesc(data);
-  const labels = sorted.map(r => `Evento ${r.eventoId}`);
-  const values = sorted.map(r => r.qVentas);
+  const labels = sorted.map(r => r.name);
+  const values = sorted.map(r => r.price);
+
+  const ctx = document.getElementById('salesChart').getContext('2d');
+
+  // Destruir gráfico previo si existe
+  if (salesChartInstance) {
+    salesChartInstance.destroy();
+  }
 
   const gradient = (ctx) => {
     const g = ctx.createLinearGradient(0, 0, 0, 300);
@@ -50,14 +68,12 @@ function renderChart(data) {
     return g;
   };
 
-  const ctx = document.getElementById('salesChart').getContext('2d');
-
-  new Chart(ctx, {
+  salesChartInstance = new Chart(ctx, {
     type: 'bar',
     data: {
       labels,
       datasets: [{
-        label: 'Ventas',
+        label: 'Ventas ($)',
         data: values,
         backgroundColor: (c) => gradient(c.chart.ctx),
         borderColor: 'rgba(91,141,238,0.8)',
@@ -78,7 +94,7 @@ function renderChart(data) {
           titleColor: '#8891a8',
           bodyColor: '#e8eaf0',
           callbacks: {
-            label: (ctx) => `  ${fmtNumber(ctx.parsed.y)} ventas`,
+            label: (ctx) => `  $${fmtNumber(ctx.parsed.y)}`,
           },
         },
       },
@@ -104,22 +120,52 @@ function renderChart(data) {
 // ─── Tabla ───────────────────────────────────────────────────────────────────
 function renderTable(data) {
   const sorted = sortDesc(data);
-  const total  = sorted.reduce((s, r) => s + r.qVentas, 0);
+  const total  = sorted.reduce((s, r) => s + r.price, 0);
   const tbody  = document.getElementById('salesTableBody');
 
   tbody.innerHTML = sorted.map((row, i) => {
-    const pct = ((row.qVentas / total) * 100).toFixed(1);
+    const pct = total > 0 ? ((row.price / total) * 100).toFixed(1) : 0;
     return `
       <tr>
         <td>${i + 1}</td>
-        <td><span class="badge">Evento ${row.eventoId}</span></td>
-        <td>${fmtNumber(row.qVentas)}</td>
-        <td>${pct}%</td>
+        <td><span class="badge">${row.name}</span></td>
+        <td>$${fmtNumber(row.price)}</td>
+        <td><span class="category-tag">${row.category}</span> (${pct}%)</td>
       </tr>`;
   }).join('');
 }
 
-// ─── Footer year ─────────────────────────────────────────────────────────────
+// ─── Lógica de Procesamiento ─────────────────────────────────────────────────
+function processInput() {
+  const input = document.getElementById('jsonInput').value.trim();
+  if (!input) return;
+
+  try {
+    const data = JSON.parse(input);
+    
+    // Validación básica
+    if (!Array.isArray(data)) throw new Error('El JSON debe ser un array de objetos.');
+    
+    data.forEach((item, index) => {
+      if (!item.name || item.price === undefined || !item.category) {
+        throw new Error(`Falta información en el elemento #${index + 1} (requiere name, price, category).`);
+      }
+    });
+
+    currentData = data;
+    renderAll();
+    clearError();
+  } catch (err) {
+    showError(`Error: ${err.message}`);
+  }
+}
+
+function renderAll() {
+  renderKPIs(currentData);
+  renderChart(currentData);
+  renderTable(currentData);
+}
+
 function setYear() {
   const el = document.getElementById('footer-year');
   if (el) el.textContent = new Date().getFullYear();
@@ -127,9 +173,11 @@ function setYear() {
 
 // ─── Init ────────────────────────────────────────────────────────────────────
 (function init() {
-  const data = SALES_DATA;
-  renderKPIs(data);
-  renderChart(data);
-  renderTable(data);
   setYear();
+  renderAll();
+
+  const updateBtn = document.getElementById('updateBtn');
+  if (updateBtn) {
+    updateBtn.addEventListener('click', processInput);
+  }
 })();
