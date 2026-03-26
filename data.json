@@ -1,0 +1,32 @@
+[
+  {
+    "external_id": "9000000000",
+    "nombre_negocio": "CONVENCION DE VENTAS GLOVOX",
+    "area_negocio": "EVENTOS PRODUCIDOS",
+    "estado": "CERRADO",
+    "ingreso_total_neto": 2500000,
+    "costoAPI": 1200000,
+    "fechaAsignacion": "2024-03-01 10:00:00",
+    "Temporada": "2024"
+  },
+  {
+    "external_id": "9000000002",
+    "nombre_negocio": "FIESTA DE FIN DE AÑO",
+    "area_negocio": "PRODUCCION",
+    "estado": "NOTA DE VENTA",
+    "ingreso_total_neto": 1500000,
+    "costoAPI": 800000,
+    "fechaAsignacion": "2024-03-05 14:00:00",
+    "Temporada": "2024"
+  },
+  {
+    "external_id": "9000000003",
+    "nombre_negocio": "CAMPAMENTO DE VERANO",
+    "area_negocio": "BTL",
+    "estado": "COTIZACION",
+    "ingreso_total_neto": 5000000,
+    "costoAPI": 3000000,
+    "fechaAsignacion": "2024-03-10 09:00:00",
+    "Temporada": "2024"
+  }
+]
